@@ -9,19 +9,6 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 class ChatResource extends JsonResource
 {
-    public $resource;
-    public $sender;
-    public $companion;
-    public function __construct($resource, $sender = null, $companion = null)
-    {
-        parent::__construct($resource);
-        if ($sender === null || $companion === null) {
-            $users = $this->resource->users;
-        }
-        $this->sender = $sender && gettype($sender) !== 'integer' ? $sender : $users->where('id', auth()->id())->first();
-        $this->companion = $companion ?: $users->where('id', '!=', auth()->id())->first();
-    }
-
     /**
      * Transform the resource into an array.
      *
@@ -29,11 +16,13 @@ class ChatResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        $lastMessage = $this->resource->messages()->latest()->first();
+        $users = $this->resource->users;
+        $companion = $users->where('id', '!=', auth()->id())->first();
+        $lastMessage = $this->resource->messages->sortByDesc('id')->first();
         $data = [
             'id' => $this->resource->id,
-            'companion_name' => $this->companion?->name,
-            'avatar' => $this->companion->avatar,
+            'companion_name' => $companion->name,
+            'avatar' => $companion->avatar,
             'last_message' => null
         ];
         if ($lastMessage) {

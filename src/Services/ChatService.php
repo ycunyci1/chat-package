@@ -12,7 +12,7 @@ class ChatService
         foreach ($chats as $key => $chat) {
             $data = [];
             $companion = $chat->users->where('id', '!=', $currentUser->id)->first();
-            $lastMessage = $chat->messages()->latest()->first();
+            $lastMessage = $chat->messages->sortByDesc('id')->first();
             $data = [
                 'id' => $chat->id,
                 'companion_name' => $companion->name,

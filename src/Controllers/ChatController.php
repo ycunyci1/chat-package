@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Dd1\Chat\Controllers;
 
+use Carbon\Carbon;
 use Dd1\Chat\Events\ChatsUpdated;
 use Dd1\Chat\Events\MessageSent;
 use Dd1\Chat\Events\TypingEvent;
@@ -25,7 +26,11 @@ class ChatController extends Controller
     {
         $userChats = Chat::query()
             ->whereHas('users', fn($users) => $users->where('id', auth()->id()))
-            ->get();
+            ->with('users', 'messages.user')
+            ->get()
+            ->sortByDesc(function($chat) {
+                return $chat->messages->sortByDesc('id')->first()->created_at;
+            });
         return response()->json(ChatResource::collection($userChats));
     }
 
@@ -54,14 +59,22 @@ class ChatController extends Controller
             'text' => $data['text'],
             'chat_id' => $chatId
         ]);
-        $userChats = $chat
+        $userChats = Chat::query()
             ->whereHas('users', fn($users) => $users->where('users.id', $userId))
-            ->get();
+            ->with('users', 'messages.user')
+            ->get()
+            ->sortByDesc(function($chat) {
+                return $chat->messages->sortByDesc('id')->first()->created_at;
+            });
 
         $companion = $chat->users()->whereNot('id', auth()->id())->first();
-        $companionChats = $chat
+        $companionChats = Chat::query()
             ->whereHas('users', fn($users) => $users->where('users.id', $companion->id))
-            ->get();
+            ->with('users', 'messages.user')
+            ->get()
+            ->sortByDesc(function($chat) {
+                return $chat->messages->sortByDesc('id')->first()->created_at;
+            });;
 
         event(new MessageSent(MessageResource::make($message)));
         event(new ChatsUpdated(ChatService::getChatsDataForCurrentUser($userChats, auth()->user()), $userId));
