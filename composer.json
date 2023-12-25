@@ -1,0 +1,30 @@
+{
+    "version": "1",
+    "name": "dd1/chat",
+    "description": "Пакет для чата на центрифуге",
+    "type": "library",
+    "autoload": {
+        "psr-4": {
+            "Dd1\\Chat\\": "src/"
+        }
+    },
+    "minimum-stability": "stable",
+    "authors": [
+        {
+            "name": "Pavel"
+        }
+    ],
+    "require": {
+        "laravel/framework": "^10.0",
+        "laravel/passport": "^12.0@dev",
+        "lcobucci/jwt": "5.3.x-dev"
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "\\Dd1\\Chat\\ChatServiceProvider",
+                "\\Dd1\\Chat\\ChatBroadcastServiceProvider"
+            ]
+        }
+    }
+}
