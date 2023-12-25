@@ -1,5 +1,5 @@
 {
-    "version": "1.0.4",
+    "version": "1.0.5",
     "name": "chequite/chat",
     "license": "MIT",
     "description": "Пакет для чата на центрифуге",
@@ -18,7 +18,7 @@
     "require": {
         "laravel/framework": "^10.0",
         "laravel/passport": "^11.0.0",
-        "lcobucci/jwt": "5.3.0"
+        "lcobucci/jwt": "^5.0.0"
     },
     "extra": {
         "laravel": {
