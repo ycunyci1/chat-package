@@ -1,6 +1,6 @@
 {
     "version": "1",
-    "name": "dd1/chat",
+    "name": "chequite/chat",
     "description": "Пакет для чата на центрифуге",
     "type": "library",
     "autoload": {
