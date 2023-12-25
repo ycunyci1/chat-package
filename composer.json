@@ -1,5 +1,5 @@
 {
-    "version": "1.0.2",
+    "version": "1.0.4",
     "name": "chequite/chat",
     "license": "MIT",
     "description": "Пакет для чата на центрифуге",
