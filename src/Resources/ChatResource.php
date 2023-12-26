@@ -31,6 +31,7 @@ class ChatResource extends JsonResource
                 'timestamp' => Carbon::parse($lastMessage->created_at)->format('H:i'),
                 'sender_id' => $lastMessage->user->id,
                 'sender_name' => $lastMessage->user->name,
+                'was_read' => $lastMessage->was_read
             ];
         }
         return $data;

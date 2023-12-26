@@ -28,7 +28,7 @@ class ChatController extends Controller
             ->whereHas('users', fn($users) => $users->where('id', auth()->id()))
             ->with('users', 'messages.user')
             ->get()
-            ->sortByDesc(function($chat) {
+            ->sortByDesc(function ($chat) {
                 return $chat->messages->sortByDesc('id')->first()->created_at;
             });
         return response()->json(ChatResource::collection($userChats));
@@ -37,12 +37,39 @@ class ChatController extends Controller
     public function getMessages($chatId): JsonResponse
     {
         $chatId = intval($chatId);
-        return response()->json([
-            'messages' => MessageResource::collection(Message::where('chat_id', $chatId)
-                ->orderBy('id', 'desc')
-                ->take(15)
+        $messages = Message::where('chat_id', $chatId)
+            ->orderBy('id', 'desc')
+            ->take(15)
+            ->get()
+            ->sortBy('id');
+        $unreadMessages = $messages->where('user_id', '!=', auth()->id())->where('was_read', 0);
+        if ($unreadMessages->count()) {
+            foreach ($unreadMessages as $unreadMessage) {
+                $unreadMessage->update([
+                    'was_read' => 1
+                ]);
+            }
+            $userChats = Chat::query()
+                ->whereHas('users', fn($users) => $users->where('users.id', auth()->id()))
+                ->with('users', 'messages.user')
                 ->get()
-                ->sortBy('id')),
+                ->sortByDesc(function ($chat) {
+                    return $chat->messages->sortByDesc('id')->first()->created_at;
+                });
+            event(new ChatsUpdated(ChatService::getChatsDataForCurrentUser($userChats, auth()->user()), auth()->id()));
+
+            $companion = $unreadMessages->first()->chat->users->where('id', '!=', auth()->id())->first();
+            $companionChats = Chat::query()
+                ->whereHas('users', fn($users) => $users->where('users.id', $companion->id))
+                ->with('users', 'messages.user')
+                ->get()
+                ->sortByDesc(function ($chat) {
+                    return $chat->messages->sortByDesc('id')->first()->created_at;
+                });
+            event(new ChatsUpdated(ChatService::getChatsDataForCurrentUser($companionChats, $companion), $companion->id));
+        }
+        return response()->json([
+            'messages' => MessageResource::collection($messages),
             'companion' => UserResource::make(Chat::find($chatId)->users()->whereNot('id', auth()->id())->first()),
             'chat_id' => $chatId,
         ]);
@@ -63,7 +90,7 @@ class ChatController extends Controller
             ->whereHas('users', fn($users) => $users->where('users.id', $userId))
             ->with('users', 'messages.user')
             ->get()
-            ->sortByDesc(function($chat) {
+            ->sortByDesc(function ($chat) {
                 return $chat->messages->sortByDesc('id')->first()->created_at;
             });
 
@@ -72,9 +99,9 @@ class ChatController extends Controller
             ->whereHas('users', fn($users) => $users->where('users.id', $companion->id))
             ->with('users', 'messages.user')
             ->get()
-            ->sortByDesc(function($chat) {
+            ->sortByDesc(function ($chat) {
                 return $chat->messages->sortByDesc('id')->first()->created_at;
-            });;
+            });
 
         event(new MessageSent(MessageResource::make($message)));
         event(new ChatsUpdated(ChatService::getChatsDataForCurrentUser($userChats, auth()->user()), $userId));
@@ -122,8 +149,8 @@ class ChatController extends Controller
             'companionId' => 'exists:users,id'
         ]);
         $chat = Chat::query()
-            ->whereHas('users', fn ($users) => $users->where('id', auth()->id()))
-            ->whereHas('users', fn ($users) => $users->where('id', $data['companionId']))
+            ->whereHas('users', fn($users) => $users->where('id', auth()->id()))
+            ->whereHas('users', fn($users) => $users->where('id', $data['companionId']))
             ->first();
         if (!$chat) {
             $chat = Chat::query()->create();

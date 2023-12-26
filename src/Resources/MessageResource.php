@@ -18,6 +18,7 @@ class MessageResource extends JsonResource
         return [
             'text' => $this->resource->text,
             'user' => UserResource::make($this->resource->user),
+            'was_read' => $this->resource->was_read,
             'timestamp' => Carbon::parse($this->resource->created_at)->format('H:i'),
         ];
     }

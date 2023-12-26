@@ -15,4 +15,11 @@ class UserController extends Controller
             'name' => $user->name
         ]);
     }
+
+    public function updateCentrifugoToken()
+    {
+        return response()->json([
+            'centrifugo_token' => JwtService::generateJwt(auth()->id())
+        ]);
+    }
 }

@@ -26,4 +26,5 @@ Route::middleware('auth:api')->prefix('api')->group(function () {
     Route::post('chats/{chatId}/messages', [ChatController::class, 'sendMessage']);
     Route::post('typing', [ChatController::class, 'handleTyping']);
     Route::get('search-users', [ChatController::class, 'searchUsers']);
+    Route::get('update-centrifugo-token', [UserController::class, 'updateCentrifugoToken']);
 });
