@@ -130,4 +130,12 @@ class ChatController extends Controller
             'chatId' => $chat->id
         ]);
     }
+
+    public function readMessage($chatId, $messageId): JsonResponse
+    {
+        Message::query()->find($messageId)->update([
+            'was_read' => 1
+        ]);
+        return response()->json();
+    }
 }
