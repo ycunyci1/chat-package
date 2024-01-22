@@ -11,6 +11,7 @@ class UserController extends Controller
     {
         $user = auth()->user();
         return response()->json([
+            'id' => $user->id,
             'avatar' => $user->avatar,
             'name' => $user->name
         ]);

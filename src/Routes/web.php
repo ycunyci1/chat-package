@@ -14,9 +14,6 @@ use Illuminate\Support\Facades\Route;
 | be assigned to the "web" middleware group. Make something great!
 |
 */
-//Route::get('/api/get-user-id', [UserController::class, 'getUserId']);
-
-//Route::get('/api/get-user-id', [UserController::class, 'getUserId']);
 
 Route::middleware('auth:api')->prefix('api')->group(function () {
     Route::get('get-user-info', [UserController::class, 'getUserInfo']);

@@ -13,18 +13,19 @@ class UserStatusUpdatedEvent
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    public $userId;
-    public $isOnline;
-    public $lastSeen;
+    public $data;
+    public $channel;
 
     /**
      * Create a new event instance.
      */
     public function __construct($userId, $isOnline, $lastSeen)
     {
-        $this->userId = $userId;
-        $this->isOnline = $isOnline;
-        $this->lastSeen = Carbon::parse($lastSeen)->format('H:i');
-        $this->channel = 'user-' . $this->userId . '-status';
+        $this->channel = 'user-' . $userId . '-status';
+        $this->data = [
+            'userId' => $userId,
+            'isOnline' => $isOnline,
+            'lastSeen' => $lastSeen
+        ];
     }
 }

@@ -3,10 +3,8 @@
 namespace Dd1\Chat\Listeners;
 
 use Dd1\Chat\Services\CentrifugoService;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Queue\InteractsWithQueue;
 
-class PushMessage
+class CentrifugoPushToChannel
 {
     /**
      * Handle the event.
@@ -14,6 +12,6 @@ class PushMessage
     public function handle(object $event): void
     {
         $centrifugo = app()->make(CentrifugoService::class);
-        $centrifugo->publishToChannel($event->channel, json_encode($event->message));
+        $centrifugo->publishToChannel($event->channel, json_encode($event->data));
     }
 }

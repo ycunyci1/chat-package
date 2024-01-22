@@ -7,16 +7,16 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 
 class TypingEvent
 {
-    public $chatId;
-    public $userId;
-    public $typing;
     public $channel;
+    public $data;
 
     public function __construct($chatId, $userId, $typing)
     {
-        $this->chatId = $chatId;
-        $this->userId = $userId;
-        $this->typing = $typing;
-        $this->channel = 'chat.' . $this->chatId;
+        $this->channel = 'chat.' . $chatId;
+        $this->data = [
+            'chatId' => $chatId,
+            'userId' => $userId,
+            'typing' => $typing
+        ];
     }
 }

@@ -36,43 +36,7 @@ class ChatController extends Controller
 
     public function getMessages($chatId): JsonResponse
     {
-        $chatId = intval($chatId);
-        $messages = Message::where('chat_id', $chatId)
-            ->orderBy('id', 'desc')
-            ->take(15)
-            ->get()
-            ->sortBy('id');
-        $unreadMessages = $messages->where('user_id', '!=', auth()->id())->where('was_read', 0);
-        if ($unreadMessages->count()) {
-            foreach ($unreadMessages as $unreadMessage) {
-                $unreadMessage->update([
-                    'was_read' => 1
-                ]);
-            }
-            $userChats = Chat::query()
-                ->whereHas('users', fn($users) => $users->where('users.id', auth()->id()))
-                ->with('users', 'messages.user')
-                ->get()
-                ->sortByDesc(function ($chat) {
-                    return $chat->messages->sortByDesc('id')->first()->created_at;
-                });
-            event(new ChatsUpdated(ChatService::getChatsDataForCurrentUser($userChats, auth()->user()), auth()->id()));
-
-            $companion = $unreadMessages->first()->chat->users->where('id', '!=', auth()->id())->first();
-            $companionChats = Chat::query()
-                ->whereHas('users', fn($users) => $users->where('users.id', $companion->id))
-                ->with('users', 'messages.user')
-                ->get()
-                ->sortByDesc(function ($chat) {
-                    return $chat->messages->sortByDesc('id')->first()->created_at;
-                });
-            event(new ChatsUpdated(ChatService::getChatsDataForCurrentUser($companionChats, $companion), $companion->id));
-        }
-        return response()->json([
-            'messages' => MessageResource::collection($messages),
-            'companion' => UserResource::make(Chat::find($chatId)->users()->whereNot('id', auth()->id())->first()),
-            'chat_id' => $chatId,
-        ]);
+        return response()->json(ChatService::getMessages($chatId));
     }
 
     public function sendMessage(MessageRequest $request, $chatId): JsonResponse
@@ -104,8 +68,8 @@ class ChatController extends Controller
             });
 
         event(new MessageSent(MessageResource::make($message)));
-        event(new ChatsUpdated(ChatService::getChatsDataForCurrentUser($userChats, auth()->user()), $userId));
-        event(new ChatsUpdated(ChatService::getChatsDataForCurrentUser($companionChats, $companion), $companion->id));
+        event(new ChatsUpdated(ChatService::getChatsData($userChats, auth()->user()), $userId));
+        event(new ChatsUpdated(ChatService::getChatsData($companionChats, $companion), $companion->id));
 
         User::query()->find($userId)->update([
             'is_online' => 1,
@@ -117,9 +81,13 @@ class ChatController extends Controller
 
     public function handleTyping(Request $request)
     {
+        $data = $request->validate([
+            'chatId' => 'required|exists:chats',
+            'typing' => 'required|bool'
+        ]);
+
         $userId = auth()->id();
-        $chatId = $request->chatId;
-        $typing = $request->typing;
+
         if (!auth()->user()->is_online) {
             User::query()->find($userId)->update([
                 'is_online' => 1,
@@ -127,7 +95,9 @@ class ChatController extends Controller
             ]);
             event(new UserStatusUpdatedEvent($userId, 1, now()));
         }
-        event(new TypingEvent($chatId, $userId, $typing));
+        event(new TypingEvent($data['chatId'], $userId, $data['typing']));
+
+        return response()->json();
     }
 
     public function searchUsers(Request $request)
